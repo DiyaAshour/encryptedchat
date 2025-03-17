@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Chat App</title>
   <style>
-    /* تحسينات التصميم */
+    /* CSS | التصميم */
     body {
       font-family: Arial;
       padding: 20px;
@@ -62,23 +62,23 @@
   <div class="chat-container">
     <h1>دردشة الغرف</h1>
     
-    <!-- حالة الاتصال -->
+    <!-- Coniction Stutus | حالة الاتصال -->
     <div class="status" id="connectionStatus">جاري الاتصال...</div>
 
-    <!-- إدارة الغرف -->
+    <!--  Room Management | إدارة الغرف -->
     <div>
       <input type="text" id="roomInput" placeholder="اسم الغرفة">
       <button onclick="createRoom()">إنشاء غرفة</button>
       <button onclick="joinRoom()">الدخول</button>
     </div>
 
-    <!-- حالة الغرفة -->
+    <!-- Room Status | حالة الغرفة -->
     <div class="status" id="roomStatus"></div>
 
-    <!-- عرض الرسائل -->
+    <!--  Message Display | عرض الرسائل -->
     <div id="messages"></div>
 
-    <!-- إرسال الرسائل -->
+    <!-- Send Messages | إرسال الرسائل -->
     <div>
       <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
       <button onclick="sendMessage()">إرسال</button>
@@ -95,7 +95,7 @@
 
     let currentRoom = null;
 
-    // ============ تحسينات الأداء ============
+    // ============ Performance Enhancements | تحسينات الأداء ============
     // تحديث حالة الاتصال
     socket.on('connect', () => {
       updateStatus('✅ متصل بالخادم', 'green');
@@ -105,7 +105,7 @@
       updateStatus('❌ انقطع الاتصال', 'red');
     });
 
-    // ============ إدارة الغرف ============
+    // ============ Room Management | إدارة الغرف ============
     function createRoom() {
       const roomName = document.getElementById('roomInput').value.trim();
       if (!roomName) return;
@@ -140,7 +140,7 @@
       const message = messageInput.value.trim();
       if (!message || !currentRoom) return;
 
-      // عرض الرسالة محليًا أولًا
+      // Display Message Locally First | عرض الرسالة محليًا أولًا
       addMessage('أنت', message, true);
       
       socket.emit('send_message', {
@@ -153,12 +153,12 @@
       });
     }
 
-    // ============ معالجة الأحداث ============
+    // ============ Event Handling | معالجة الأحداث ============
     socket.on('receive_message', (data) => {
       addMessage(data.sender, data.message, false);
     });
 
-    // ============ وظائف المساعدة ============
+    // ============ Help Functions | وظائف المساعدة ============
     function addMessage(sender, text, isSelf) {
       const messagesDiv = document.getElementById('messages');
       const messageDiv = document.createElement('div');

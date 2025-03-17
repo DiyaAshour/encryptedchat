@@ -1,0 +1,17 @@
+{
+  "name": "chat-app",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "server": "node server.js",
+    "package-win": "electron-packager . ChatApp --platform=win32 --arch=x64 --icon=icon.ico --out=dist --overwrite"
+  },
+  "dependencies": {
+    "electron": "^25.0.0",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "electron-packager": "^17.1.2"
+  }
+}

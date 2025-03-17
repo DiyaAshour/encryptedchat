@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chat App</title>
+  <style>
+    /* تحسينات التصميم */
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .chat-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    #messages {
+      height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .message {
+      margin: 5px 0;
+      padding: 8px;
+      background: #e3f2fd;
+      border-radius: 5px;
+    }
+    .status {
+      color: #666;
+      font-size: 0.9em;
+      margin: 10px 0;
+    }
+    input {
+      padding: 10px;
+      margin: 5px;
+      width: 70%;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h1>دردشة الغرف</h1>
+    
+    <!-- حالة الاتصال -->
+    <div class="status" id="connectionStatus">جاري الاتصال...</div>
+
+    <!-- إدارة الغرف -->
+    <div>
+      <input type="text" id="roomInput" placeholder="اسم الغرفة">
+      <button onclick="createRoom()">إنشاء غرفة</button>
+      <button onclick="joinRoom()">الدخول</button>
+    </div>
+
+    <!-- حالة الغرفة -->
+    <div class="status" id="roomStatus"></div>
+
+    <!-- عرض الرسائل -->
+    <div id="messages"></div>
+
+    <!-- إرسال الرسائل -->
+    <div>
+      <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
+      <button onclick="sendMessage()">إرسال</button>
+    </div>
+  </div>
+
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io('http://localhost:3000', {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+
+    let currentRoom = null;
+
+    // ============ تحسينات الأداء ============
+    // تحديث حالة الاتصال
+    socket.on('connect', () => {
+      updateStatus('✅ متصل بالخادم', 'green');
+    });
+
+    socket.on('disconnect', () => {
+      updateStatus('❌ انقطع الاتصال', 'red');
+    });
+
+    // ============ إدارة الغرف ============
+    function createRoom() {
+      const roomName = document.getElementById('roomInput').value.trim();
+      if (!roomName) return;
+      
+      socket.emit('create_room', roomName, (response) => {
+        if (response.status === 'success') {
+          currentRoom = response.room;
+          updateRoomStatus(`تم إنشاء الغرفة: ${response.room}`);
+        } else {
+          showError(response.message);
+        }
+      });
+    }
+
+    function joinRoom() {
+      const roomName = document.getElementById('roomInput').value.trim();
+      if (!roomName) return;
+      
+      socket.emit('join_room', roomName, (response) => {
+        if (response.status === 'success') {
+          currentRoom = response.room;
+          updateRoomStatus(`أنت في الغرفة: ${response.room}`);
+        } else {
+          showError(response.message);
+        }
+      });
+    }
+
+    // ============ إدارة الرسائل ============
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value.trim();
+      if (!message || !currentRoom) return;
+
+      // عرض الرسالة محليًا أولًا
+      addMessage('أنت', message, true);
+      
+      socket.emit('send_message', {
+        room: currentRoom,
+        message: message
+      }, (response) => {
+        if (response.status === 'sent') {
+          messageInput.value = '';
+        }
+      });
+    }
+
+    // ============ معالجة الأحداث ============
+    socket.on('receive_message', (data) => {
+      addMessage(data.sender, data.message, false);
+    });
+
+    // ============ وظائف المساعدة ============
+    function addMessage(sender, text, isSelf) {
+      const messagesDiv = document.getElementById('messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message';
+      messageDiv.innerHTML = `
+        <strong>${isSelf ? 'أنت' : sender}:</strong>
+        <span>${text}</span>
+      `;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // التمرير التلقائي
+    }
+
+    function updateStatus(text, color) {
+      const statusDiv = document.getElementById('connectionStatus');
+      statusDiv.textContent = text;
+      statusDiv.style.color = color;
+    }
+
+    function updateRoomStatus(text) {
+      document.getElementById('roomStatus').textContent = text;
+    }
+
+    function showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'message error';
+      errorDiv.textContent = message;
+      document.getElementById('messages').appendChild(errorDiv);
+    }
+  </script>
+</body>
+</html>
